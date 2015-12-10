@@ -1,5 +1,5 @@
 <?php 
-$db = new mysqli('localhost', 'sg0920', 'GZsz@#2010', 'trackingsoftware');
+include("db.php");
 session_start();
     if($_POST['username']!="" && $_POST['password']!=""):
         extract($_POST);

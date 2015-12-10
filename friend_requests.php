@@ -1,5 +1,5 @@
 <?php 
-    $db = new mysqli('localhost', 'sg0920', 'GZsz@#2010', 'trackingsoftware');
+include("db.php");
     extract($_POST);
     session_start();
     $serach_string = $_POST['userid'];
