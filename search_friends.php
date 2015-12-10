@@ -1,13 +1,12 @@
 <?php 
 include("db.php");
     extract($_POST);
-    session_start();
     $serach_string = $_POST['searchstring'];
-	if($fetch=$db->query("SELECT username FROM users WHERE username LIKE '%$serach_string%'")){
-	   $friends=$fetch->fetch_all();
-	   echo json_encode($friends);
-	}else{
-	   echo 'no results';
-	}
+    $fetch=$db->query("SELECT username FROM users WHERE username LIKE '%$serach_string%'");
+    $friends_list = array();
+    while ($friends=mysqli_fetch_array($fetch)){
+        $row=mysqli_fetch_array($fetch);
+        array_push($friends_list, $row);
+    }
+    echo json_encode($friends_list);
 ?>
-

@@ -3,7 +3,7 @@ include("db.php");
     extract($_POST);
     $user_id=mysqli_real_escape_string($db,$_POST['userid']);
     $fetch=$db->query("SELECT * FROM friends WHERE user_id='$user_id'");
-    $friends_list = [];
+    $friends_list = array();
     while ($friends=mysqli_fetch_array($fetch)){
         $friend_id = $friends['friend_id'];
         $fetch=$db->query("SELECT * FROM locations WHERE user_id='$friend_id'");
