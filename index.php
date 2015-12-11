@@ -1,16 +1,19 @@
 <html>
 <head>
-  <title>classfied</title>
+ <title>SAN</title>
   <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
    <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.13.1/jquery.validate.min.js"></script>
 <style type="text/css">
+html,body{
+background-color: #202020;
+
+  }
 .error{
 margin-top: 6px;
 margin-bottom: 0;
-color: #fff;
-background-color: #D65C4F;
+color: #000;
 display: table;
 padding: 5px 8px;
 font-size: 11px;
@@ -18,13 +21,20 @@ font-weight: 600;
 line-height: 14px;
   }
 
+h2,h4{
+  color:#ffffcc;
+
+
+}  
+
 </style>
 </head>
 <body>  
-      <div class="modal-dialog">
-        <div class="modal-content col-md-8">
+  <center><h2>S</h2><h4>ocial</h4><h2>A</h2><h4>wareness</h4><h2>N</h2><h4>etwork</h4></center>
+      <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content" >
           <div class="modal-header">
-            <h4 class="modal-title"><i class="icon-paragraph-justify2"></i> User Login</h4>
+            <h3 class="modal-title"><i class="icon-paragraph-justify2"></i> User Login</h3>
           </div>
            <form method="post" autocomplete="off" id="login_form">
               <div class="modal-body with-padding">                             
@@ -54,16 +64,17 @@ line-height: 14px;
             </div>
           </form>          
         </div>
+
         <div class="col-md-8">
         <div style="font-size:13px;text-align:center;margin-top:20px">
       </div>
       </div>
       </div>   
 
-      <div class="modal-dialog">
-        <div class="modal-content col-md-8">
+      <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title"><i class="icon-paragraph-justify2"></i> Register</h4>
+            <h3 class="modal-title"><i class="icon-paragraph-justify2"></i> Register</h3>
           </div>
            <form method="post" autocomplete="off" id="register_form">
               <div class="modal-body with-padding">                             

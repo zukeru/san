@@ -26,14 +26,16 @@ include("session.php");
     		overflow-y: hidden;
     		background-color: #000000;
 		}
+
 	  </style>
+	  <title>SAN</title>
   </head>
 
 <body>
 		<div id="page">
 			<div class="header">
 				<a href="#menu"></a>
-				San
+				<font color="#ffffcc">Social Awareness Network</font>
 			</div>
 			<div class="content">
 			      <form method="post" id="coords_form">
@@ -49,8 +51,7 @@ include("session.php");
 
 			<nav id="menu">
 				<ul>
-					<li><a href="#">Hello <?php echo $_SESSION['login_username']; ?></a></li>
-					<li><a href="#">Home</a></li>
+					<li><center><p id='profile_image_place'></p><?php echo $_SESSION['login_username']; ?></center></li>
 					<li><a href="#">Find Friends</a>
 					<ul><li>
 								    <form method="post" id="search_friends">
@@ -61,10 +62,21 @@ include("session.php");
 				    </li></ul>
 					<li><a href="#">Friends</a><ul><p id ='my_friends'></p></ul></li>
 					<li><a href="#">Friend Requests</a><ul><p id ='friend_request_list'></p></ul></li>
+					<li><a href="#">Upload Profile Image</a><ul><li>
+						<form id="uploadimage" method="POST" action="" enctype="multipart/form-data">
+							<div id="selectImage">
+								<center>
+									<label>Select Your Image</label><br/>
+									<input type="file" name="file" id="file" required />
+									<input type='hidden' name='user_name' id='user_name'><br>
+									<button  style="width:100%;" onclick="uploadImage();" class="btn btn-primary">Upload</button>
+								</center>
+							</div>
+						</form>
+					</li></ul></li>
 					<li><a href="logout.php">Logout</a></li>
-					<li><a href="#contact">Contact</a></li>
 				</ul>
-				
+
 			</nav>
 		</div>
 <script>
@@ -86,18 +98,25 @@ include("session.php");
 	              url: url,
 	               data: $("#search_friends").serialize(), // serializes the form's elements.
 	                 success: function(data)
-	                   {   
-	                   	console.log(data);       
+	                   {    
 	                   	 var returned_friends = JSON.parse(data); 
 	                   	 var html_built = '<br>';
-	                   	 console.log(returned_friends);
-	                   	 console.log($("#search_friends").serialize());
+	                   	 var search_profile_pic = '';
 	                   	 if (returned_friends){ 
 		                   	 $.each( returned_friends, function( key, value ) {
-		                   	 	if (key =="username"){
-		                   	 		html_built += '<li><a href="#"><button class="btn btn-primary" style="width:100%;" id="'+value+'" onClick="add_friend(this.id)"> Send '+value+' A Friend Request</button></li>';
-		                   	    }
-		                   	 });
+			                   	 $.each(value, function( keys, values ) {		
+			                   	 		if (keys =="1"){
+					                   		try{
+					                   			search_profile_pic = "images/"+values.filename;
+					                   			console.log(search_profile_pic);
+					                   		}
+					                   		catch(err){
+					                   			search_profile_pic = "nopic.jpg";
+					                   		}	
+					                   	}
+					            });
+		                   		html_built += '<li style="padding:5px;"><center><a href="#"><img width="60" height="60" style="padding:5px;" src="'+search_profile_pic+'"><button class="btn btn-primary" style="width:70%;" id="'+value.username+'" onClick="add_friend(this.id)"> Send '+value.username+' A Friend Request</button><center></li>';
+		                   	});
 	                   	}
 	                   	html_built += ""
 	                   	 document.getElementById("list_friends").innerHTML = html_built;  
@@ -117,11 +136,20 @@ include("session.php");
 	                   {   
 			                   	var current_friends = JSON.parse(data); 
 			                   	var html_built = '';
+			                   	var friend_profile_pic = '';
 			                   	if (current_friends){   
 				                   	$.each( current_friends, function( key, value ) {
-				                   		if (key =="friend_id"){
-			 							 html_built += '<li id="friend-'+value+'"><button class="btn btn-primary" style="width:100%;">'+ value + '</button></li>';
-			 							}
+				                   		$.each(value, function( keys, values ) {
+				                   			if (keys =="3"){
+				                   				try{
+				                   					friend_profile_pic = "images/"+values.filename;
+				                   				}
+				                   				catch(err){
+				                   					friend_profile_pic = "nopic.jpg";
+				                   				}	
+				                   			}
+				                   		});
+			 							 html_built += '<li style="margin-left:5px; padding:5px;" "id="friend-'+value.friend_id+'"><img style="padding:3px;" src ="'+friend_profile_pic+'" width="60" height="60">'+ value.friend_id + '</li>';
 									});
 			                   }
 			                   html_built +='';
@@ -139,14 +167,13 @@ include("session.php");
 	               data: {"userid":document.getElementById("userid").value }, // serializes the form's elements.
 	                 success: function(data)
 	                   {   
+	                   			
 			                   	var returned_friend_requests = JSON.parse(data); 
 			                   	var html_built = '';
 			                   	if (returned_friend_requests){     
 				                   	$.each( returned_friend_requests, function( key, value ) {
-				                   		if (key =="user_id"){
-			 							 html_built += '<li id="request-'+value+'">'+
-			 							 ' <a href="#"><button class="btn btn-primary" style="width:100%;" id="'+value+'" onClick="accept_request(this.id)">Accept '+value+' Friend Request</button></a></li>';
-			 							}
+			 							 html_built += '<li id="request-'+value.user_id+'">'+
+			 							 ' <a href="#"><button class="btn btn-primary" style="width:100%;" id="'+value.user_id+'" onClick="accept_request(this.id)">Accept '+value.user_id+' Friend Request</button></a></li>';
 									});
 			                   }
 			                   	 html_built += '';
@@ -218,7 +245,30 @@ include("session.php");
           id: 'mapbox.streets'
         }).addTo(map);
       }
-
+      var profile_pic = '';
+      function get_profilepic(){
+	      	var url = "get_profilepic.php";       
+	        if($('#coords_form').valid()){
+	          $.ajax({
+	            type: "POST",
+	              url: url,
+	               data: $("#coords_form").serialize(), // serializes the form's elements.
+	                 success: function(data)
+	                   {          
+	                   	 var returned_pic = JSON.parse(data);  
+	                   	 if (returned_pic){ 
+	                   	 	document.getElementById("profile_image_place").innerHTML = "<img src='images/"+returned_pic.filename+"' style='border-color:#202020; margin-top:3px; border-width: 3px;border-style: solid;' width='150' height='150'>";
+	                   		profile_pic = "images/"+returned_pic.filename;
+	                   	}else{
+	                   		document.getElementById("profile_image_place").innerHTML = "<img src='nopic.jpg' style='border-color:#202020; margin-top:3px; border-width: 3px;border-style: solid;' width='150' height='150'>";
+	                   		profile_pic = "nopic.jpg";
+	                   	}
+	                   }
+	               });
+	             }
+	        return false;
+      }
+      get_profilepic();
       
       function getCoords(){
 	      	var url = "get_coords.php";       
@@ -230,7 +280,7 @@ include("session.php");
 	                 success: function(data)
 	                   {          
 	                   	 var returned_coords = JSON.parse(data);   
-	                   	 addMarkerGroup(returned_coords.geo_lat,returned_coords.geo_lon,map,returned_coords.user_id);     
+	                   	 addMarkerGroup(returned_coords.geo_lat,returned_coords.geo_lon,map,returned_coords.user_id,profile_pic);     
 	                   }
 	               });
 	             }
@@ -286,10 +336,18 @@ include("session.php");
 	        return false;
       }
 	  var markers = new L.FeatureGroup();
-      function addMarkerGroup(lat_ret,lon_ret,map,user){
+      function addMarkerGroup(lat_ret,lon_ret,map,user, profile_pic){
+      	var profilePicIcon = L.icon({
+		    iconUrl: profile_pic,
+		    iconSize:     [50, 50], // size of the icon
+		    iconAnchor:   [25, 25], // point of the icon which will correspond to marker's location
+		    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+		});
+
+
         map.removeLayer(markers);
         markers = new L.FeatureGroup();
-        var marker = L.marker([lat_ret, lon_ret]).addTo(map).bindPopup("User:" + user).openPopup();
+        var marker = L.marker([lat_ret, lon_ret]).addTo(map).bindPopup("User:" + user,{autoClose: false,autoPan: false,icon: profilePicIcon}).openPopup();
         markers.addLayer(marker);
         map.addLayer(markers);
       }
@@ -302,7 +360,7 @@ include("session.php");
 		}
 
       function addFriendMarkerGroup(lat_ret,lon_ret,map,user){
-        var friend_marker = L.marker([lat_ret, lon_ret]).addTo(map).bindPopup("User:" + user).openPopup();
+        var friend_marker = L.marker([lat_ret, lon_ret]).addTo(map).bindPopup("User:" + user,{autoClose: false,autoPan: false}).openPopup();
         friend_markers.addLayer(friend_marker);
         map.addLayer(friend_markers);
       }
@@ -310,6 +368,27 @@ include("session.php");
       function removeAllMarkers(){
           map.removeLayer(markers);
       }
+
+      function uploadImage(){
+      	var user_name = document.getElementById("userid").value;
+      	document.getElementById("user_name").value = user_name;
+      	var form = document.getElementById('uploadimage');
+		var formData = new FormData(form);
+		$.ajax({
+			url: "upload_image.php", // Url to which the request is send
+			type: "POST",             // Type of request to be send, called as method
+			data: formData, // Data sent to server, a set of key/value pairs (i.e. form fields and values)
+			contentType: false,       // The content type used when sending data to the server.
+			cache: false,             // To unable request pages to be cached
+			processData:false,        // To send DOMDocument or non processed data file it is set to false
+			success: function(data)   // A function to be called if request succeeds
+			{
+				
+			}
+		});
+		get_profilepic();
+	}
+
 		$(function() {
 				$('nav#menu').mmenu({
 					extensions	: [ 'effect-slide-menu', 'pageshadow' ],

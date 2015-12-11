@@ -4,7 +4,10 @@ include("db.php");
     session_start();
     $serach_string = $_POST['userid'];
     $fetch=$db->query("SELECT * FROM friend_requests WHERE friend_id='$serach_string'");
-    $friends=mysqli_fetch_array($fetch);
-    //echo $search_string
+    $friends = array();
+    while ($row = mysqli_fetch_array($fetch)) {
+        array_push($friends, $row);
+    }
     echo json_encode($friends);
 ?>
+
