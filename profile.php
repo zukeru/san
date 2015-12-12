@@ -26,7 +26,24 @@ include("session.php");
     		overflow-y: hidden;
     		background-color: #000000;
 		}
-
+		#chats {
+		    position: fixed;
+		    right: 0;
+		    top:0;
+		    width: 20%;
+		    height: 100%;
+		    background-color: #c0c0c0;
+		    padding:30px;
+		    overflow-x: hidden; 
+    		overflow-y: scroll;
+		}
+		#footer {
+		    position: fixed;
+		    bottom: 0;
+		    width: 100%;
+		    background-color: #000000;
+		    padding:5px;
+		}
 	  </style>
 	  <title>SAN</title>
   </head>
@@ -79,6 +96,16 @@ include("session.php");
 
 			</nav>
 		</div>
+		<div id="chats">
+
+		</div>
+
+		<div id="footer">
+			
+			    <input type="text" style="width:94.5%; border-radius:5px; height:40px;" name="chatInput" id="chatInput" placeholder="enter your message here">
+			    <button style="float:right;"  onclick="send_chat();" class="btn btn-success">Send</button>
+			  
+		</div>
 <script>
       var lat_ret = 0;
       var lon_ret = 0;
@@ -86,6 +113,7 @@ include("session.php");
       var first = "true";
 
       function resize_map(){
+      	 document.getElementById("footer").style.width =  screen.availWidth + "px";
       	 document.getElementById("map").style.width =  screen.availWidth + "px";
       	 document.getElementById("map").style.height =  screen.availHeight - 60 + "px";
       }
@@ -108,7 +136,7 @@ include("session.php");
 			                   	 		if (keys =="1"){
 					                   		try{
 					                   			search_profile_pic = "images/"+values.filename;
-					                   			console.log(search_profile_pic);
+					                   			
 					                   		}
 					                   		catch(err){
 					                   			search_profile_pic = "nopic.jpg";
@@ -158,6 +186,48 @@ include("session.php");
 	               });
 	        return false;
       }
+
+      var html_built = '';
+      var old_chats = '';
+
+      function get_chats(){
+      	var sort_by = function(field, reverse, primer){
+
+		   var key = primer ? 
+		       function(x) {return primer(x[field])} : 
+		       function(x) {return x[field]};
+
+		   reverse = !reverse ? 1 : -1;
+
+		   return function (a, b) {
+		       return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
+			} 
+		}
+	      	var url = "get_chats.php";      
+	          $.ajax({
+	            type: "POST",
+	              url: url,
+	               data: {"userid":document.getElementById("userid").value }, // serializes the form's elements.
+	                 success: function(data)
+	                   {   
+			                   	var chats = JSON.parse(data); 
+			                   	if (old_chats != chats){
+				                   	if (chats){     
+				                   		chats.sort(sort_by('timestamp', false, function(a){return a.toUpperCase()}  ));
+				                   		document.getElementById("chats").innerHTML = '';
+					                   	$.each( chats, function( key, value ) {
+					                   	html_built+="<div id='chat' style='margin-bottom:10px;width:100%;background-color:#FFF;color:#202020;padding:10px;border-radius:15px;border-width:15px;'>"+value.username+ " says: " + value.message + " @: " + value.timestamp + "</div>";
+										});
+									 document.getElementById("chats").innerHTML = html_built;  
+				                   	 old_chats = chats;
+				                  }
+				                   	 html_built = '';
+			                   }
+	                   }
+	               });
+	        return false;
+      }
+
 
       function friend_requests(){
 	      	var url = "friend_requests.php";      
@@ -209,6 +279,20 @@ include("session.php");
 	                 success: function(data)
 	                   {   
 						//console.log(data); 
+	                   }
+	               });
+	        return false;
+      }
+
+      function send_chat(){
+	      	var url = "send_chat.php";      
+	          $.ajax({
+	            type: "POST",
+	              url: url,
+	               data: {"chat" : document.getElementById("chatInput").value, "userid":document.getElementById("userid").value }, // serializes the form's elements.
+	                 success: function(data)
+	                   {   
+						console.log(data); 
 	                   }
 	               });
 	        return false;
@@ -269,7 +353,34 @@ include("session.php");
 	        return false;
       }
       get_profilepic();
-      
+
+      var friend_profile_pic = '';
+      function get_friend_profilepic(user){
+	      	var url = "get_profilepic.php";   
+	      	friend_profile_pic = ''; 
+	      	try{   
+	          $.ajax({
+	            type: "POST",
+	              url: url,
+	               data: {"userid":user}, // serializes the form's elements.
+	                 success: function(data)
+	                   {          
+	                   	 var returned_pic = JSON.parse(data);  
+
+	                   	 if (returned_pic){ 
+	                   		friend_profile_pic = "images/"+returned_pic.filename;
+	                   	}else{
+	                   		friend_profile_pic = "nopic.jpg";
+	                   	}
+	                   }
+	               });
+	        return false;
+	    }
+	    catch(err){
+
+	    }
+      }
+
       function getCoords(){
 	      	var url = "get_coords.php";       
 	        if($('#coords_form').valid()){
@@ -280,7 +391,7 @@ include("session.php");
 	                 success: function(data)
 	                   {          
 	                   	 var returned_coords = JSON.parse(data);   
-	                   	 addMarkerGroup(returned_coords.geo_lat,returned_coords.geo_lon,map,returned_coords.user_id,profile_pic);     
+	                   	 addMarkerGroup(returned_coords.geo_lat,returned_coords.geo_lon,map,returned_coords.user_id);     
 	                   }
 	               });
 	             }
@@ -299,7 +410,8 @@ include("session.php");
 			                   	if (friend_coords){ 
 			                   		removeFriendMarkers();  
 				                   	$.each( friend_coords, function( key, value ) {
-				                   			addFriendMarkerGroup(value.geo_lat,value.geo_lon,map,value.user_id);  
+
+				                   			addFriendMarkerGroup(value.geo_lat,value.geo_lon,map,value.user_id,friend_profile_pic);  
 									});
 			                   }  
 			           
@@ -311,7 +423,6 @@ include("session.php");
       function saveCoords(lat_ret, lon_ret){
       		document.getElementById("lat_input").value = lat_ret;
       		document.getElementById("lon_input").value = lon_ret;
-      		//console.log($("#coords_form").serialize());
 	      	var url = "save_coords.php";       
 	        if($('#coords_form').valid()){
 	          $('#coords_error').html('Please wait...');  
@@ -336,18 +447,19 @@ include("session.php");
 	        return false;
       }
 	  var markers = new L.FeatureGroup();
-      function addMarkerGroup(lat_ret,lon_ret,map,user, profile_pic){
+      function addMarkerGroup(lat_ret,lon_ret,map,user){
+
       	var profilePicIcon = L.icon({
 		    iconUrl: profile_pic,
 		    iconSize:     [50, 50], // size of the icon
 		    iconAnchor:   [25, 25], // point of the icon which will correspond to marker's location
-		    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+		    popupAnchor:  [0, -30] // point from which the popup should open relative to the iconAnchor
 		});
 
 
         map.removeLayer(markers);
         markers = new L.FeatureGroup();
-        var marker = L.marker([lat_ret, lon_ret]).addTo(map).bindPopup("User:" + user,{autoClose: false,autoPan: false,icon: profilePicIcon}).openPopup();
+        var marker = L.marker([lat_ret, lon_ret], {icon: profilePicIcon } ).addTo(map).bindPopup("User:" + user, {autoClose: false , autoPan: false }).openPopup();
         markers.addLayer(marker);
         map.addLayer(markers);
       }
@@ -359,10 +471,30 @@ include("session.php");
         	friend_markers = new L.FeatureGroup();
 		}
 
-      function addFriendMarkerGroup(lat_ret,lon_ret,map,user){
-        var friend_marker = L.marker([lat_ret, lon_ret]).addTo(map).bindPopup("User:" + user,{autoClose: false,autoPan: false}).openPopup();
-        friend_markers.addLayer(friend_marker);
-        map.addLayer(friend_markers);
+      function addFriendMarkerGroup(lat_ret,lon_ret,map,user,friend_profile_pic){
+      	get_friend_profilepic(user);
+	    if ( friend_profile_pic ) { 
+	    	var friend_profile_pic = friend_profile_pic;
+	    }else{
+	    	var friend_profile_pic = 'nopic.jpg';
+	    }
+
+      	var friendprofilePicIcon = L.icon({
+		    iconUrl: friend_profile_pic ,
+		    iconSize:     [50, 50], // size of the icon
+		    iconAnchor:   [25, 25], // point of the icon which will correspond to marker's location
+		    popupAnchor:  [0, -30] // point from which the popup should open relative to the iconAnchor
+		});
+      	if (friend_profile_pic){
+	        var friend_marker = L.marker([lat_ret, lon_ret], {icon: friendprofilePicIcon } ).addTo(map).bindPopup("User:" + user,{autoClose: false,autoPan: false}).openPopup();
+	        friend_markers.addLayer(friend_marker);
+	        map.addLayer(friend_markers);
+        }else{
+        	var friend_marker = L.marker([lat_ret, lon_ret]).addTo(map).bindPopup("User:" + user,{autoClose: false,autoPan: false}).openPopup();
+	        friend_markers.addLayer(friend_marker);
+	        map.addLayer(friend_markers);
+
+        }
       }
 
       function removeAllMarkers(){
