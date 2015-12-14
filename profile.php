@@ -29,11 +29,13 @@ include("session.php");
 		#chats {
 		    position: fixed;
 		    right: 0;
-		    top:0;
+		    top:40px;
 		    width: 20%;
 		    height: 100%;
 		    background-color: #c0c0c0;
-		    padding:30px;
+		    padding-left:30px;
+		    padding-right:30px;
+		    padding-top:10px;
 		    overflow-x: hidden; 
     		overflow-y: scroll;
 		}
@@ -114,6 +116,7 @@ include("session.php");
 
       function resize_map(){
       	 document.getElementById("footer").style.width =  screen.availWidth + "px";
+      	 document.getElementById("chats").style.height =  screen.availHeight - 170 + "px";
       	 document.getElementById("map").style.width =  screen.availWidth + "px";
       	 document.getElementById("map").style.height =  screen.availHeight - 60 + "px";
       }
@@ -210,16 +213,26 @@ include("session.php");
 	               data: {"userid":document.getElementById("userid").value }, // serializes the form's elements.
 	                 success: function(data)
 	                   {   
-			                   	var chats = JSON.parse(data); 
+			                   	var chats = JSON.parse(data);
+			                   	var chats_length = chats.length; 
+			                   	var loop_until_length = chats_length - 6;
+			                   	current_count = 0;
 			                   	if (old_chats != chats){
 				                   	if (chats){     
 				                   		chats.sort(sort_by('timestamp', false, function(a){return a.toUpperCase()}  ));
 				                   		document.getElementById("chats").innerHTML = '';
 					                   	$.each( chats, function( key, value ) {
-					                   	html_built+="<div id='chat' style='margin-bottom:10px;width:100%;background-color:#FFF;color:#202020;padding:10px;border-radius:15px;border-width:15px;'>"+value.username+ " says: " + value.message + " @: " + value.timestamp + "</div>";
+					                   		if (current_count >= loop_until_length){
+					                   			html_built+="<div id='chat' style='margin-bottom:10px;width:100%;background-color:#FFF;color:#202020;padding:10px;border-radius:15px;border-width:15px;'>"+value.username+ " says: " + value.message + " @: " + value.timestamp + "</div>";
+												
+											}else{
+												current_count+=1;
+											}
+
 										});
 									 document.getElementById("chats").innerHTML = html_built;  
 				                   	 old_chats = chats;
+				                   	 current_count = 0;
 				                  }
 				                   	 html_built = '';
 			                   }
